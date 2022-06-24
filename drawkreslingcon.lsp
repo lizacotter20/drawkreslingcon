@@ -1,19 +1,19 @@
-(defun c:drawkreslingcon ()
+(defun c:drawkreslingcon () ;concical kresling with max height and isosceles trapezoid panels
 
 ;get relevant parameters from user
-(setq H (getreal "\nEnter deployed height:"))
-(setq H0 (getreal "\nEnter folded height:"))
+;(setq H (getreal "\nEnter deployed height:"))
+;(setq H0 (getreal "\nEnter folded height:"))
 (setq n (getint "\nEnter number of polygon edges:"))
 
 ;check the design constraint
-(if (> (abs (- (expt H 2) (expt H0 2))) (expt (cot (/ pi n)) 2))
-    (progn
-       (print "Your parameters have failed to meet the design constraint |H^2 - H0^2| <= cot^2(pi/n)")
-       (print "Please adjust your parameters and try again")
-       (exit) 
-    )
-    (print '())
-)
+;(if (> (abs (- (expt H 2) (expt H0 2))) (expt (cot (/ pi n)) 2))
+    ;(progn
+       ;(print "Your parameters have failed to meet the design constraint |H^2 - H0^2| <= cot^2(pi/n)")
+       ;(print "Please adjust your parameters and try again")
+       ;(exit) 
+    ;)
+    ;(print '())
+;)
 
 ;continue getting relevant parameters from user
 (setq a (getreal "\nEnter length of the edges of the top polygon:"))
@@ -33,50 +33,46 @@
 		(T (print "Invalid response, please type Y, y, N, or n")) 
 	)
 )
-(print "heyyyyyyy")
 
 ;the second point is the desired distance from the user selected first point
 (setq M (list (+ (car Npt) a) (cadr Npt))) 
 (print M)
 
 ;useful terms to clean up the calculations
-(setq H0sqr (expt H0 2))
-(print H0sqr)
-(setq Hsqr (expt H 2))
-(print Hsqr)
-(print n)
-(print Npt)
+;(setq H0sqr (expt H0 2))
+;(print H0sqr)
+;(setq Hsqr (expt H 2))
 (setq param (/ pi n))
-(print param)
-(print "useful terms")
 
 ;radii of the two polygons
 (setq rsmall (/ a (* 2 (sin param))))
 (setq Rlarge (/ b (* 2 (sin param))))
-(print "radii")
 
 ;more useful terms to clean up the calculations
 (setq rssqr (expt rsmall 2))
 (setq Rlsqr (expt Rlarge 2))
-(print "more useful terms")
 
 ;do the calculations for the conical Kresling
-(setq phi (- (/ pi 2) param))
-(setq c (expt (- (+ Hsqr (+ rssqr Rlsqr)) (* (* (* 2 rsmall) Rlarge) (cos phi))) 0.5))
-(setq d (expt (- (+ Hsqr (+ rssqr Rlsqr)) (* (* (* 2 rsmall) Rlarge) (cos (+ phi (* 2 param))))) 0.5))
-(setq beta (acos (/ (- (+ (expt b 2) (expt c 2)) (expt d 2)) (* (* 2 b) c))))
+;(setq phi (- (/ pi 2) param))
+;(setq phi (- pi (* 2 param)))
+;(setq c (expt (- (+ Hsqr (+ rssqr Rlsqr)) (* (* (* 2 rsmall) Rlarge) (cos phi))) 0.5))
+(setq c_fs (expt (+ (+ rssqr Rlsqr) (* (* (* 2 rsmall) Rlarge) (cos (* 2 param)))) 0.5))
+;(setq d (expt (- (+ Hsqr (+ rssqr Rlsqr)) (* (* (* 2 rsmall) Rlarge) (cos (+ phi (* 2 param))))) 0.5))
+;(setq beta (acos (/ (- (+ (expt b 2) (expt c 2)) (expt d 2)) (* (* 2 b) c))))
+(setq beta (acos (/ (- b a) (* 2 c_fs))))
 (print "did some calculations")
 
 ;angles in the quadrilateral for finding xy coords of the other 2 points in the panel
+"""
 (setq cosNMO (/ (- (+ (expt a 2) (expt b 2)) (expt c 2)) (* (* 2 a) b)))
 (setq NMO (acos cosNMO))
 (setq OMP (acos (/ (- (+ (expt c 2) (expt d 2)) (expt b 2)) (* (* 2 c) d))))
-(print "~angles~")
+"""
 
 ;other two points in the panel
-(setq O (list (- (car M) (* d cosNMO)) (- (cadr M) (* d (sin NMO)))))
+(setq O (list (- (car Npt) (/ (- b a) 2)) (- (cadr Npt) (* c_fs (sin beta)))))
 (print O)
-(setq P (list (- (car M) (* c (cos (+ NMO OMP)))) (- (cadr M) (* c (sin (+ NMO OMP))))))
+(setq P (list (+ (car M) (/ (- b a) 2)) (- (cadr M) (* c_fs (sin beta)))))
 (print P)
 (print "panel points")
 
@@ -85,23 +81,15 @@
 (setq p0 (list (+ (car Npt) (* 0.5 a)) (+ (cadr Npt) apothem)))
 (print "center")
 
-;this is a lot of geometry... i wonder if i should make a new user coordinate system relative to OP to make this easier to read
 ;calculations to find xy coords of the tab points
 (setq tabwidth (* 0.5 apothem)) 
 (setq OPR (/ (* (- n 2) param) 2))
-(setq e (* tabwidth (csc OPR)))
-(setq POM (- pi (+ OMP beta)))
-(setq QOYm (- (/ pi 2) (- (+ POM OPR) NMO)))
-(setq MPXp (+ NMO OMP))
-(setq RPYm (- (* 2 pi) (+ (+ (+ MPXp beta) OPR) (/ pi 2))))
 (print "more geometric calcs")
 
 ;two points for the tab
-(setq Q (list (+ (car O) (* e (sin QOYm))) (- (cadr O) (* e (cos QOYm)))))
-(setq R (list (- (car P) (* e (sin RPYm))) (- (cadr P) (* e (cos RPYm)))))
+(setq Q (list (+ (car O) (* (* 0.5 apothem) (cot OPR))) (- (cadr O) (* 0.5 apothem))))
+(setq R (list (- (car P) (* (* 0.5 apothem) (cot OPR))) (- (cadr P) (* 0.5 apothem))))
 (print "~tab points~")
-
-
 
 (if layers
 	(progn
@@ -117,7 +105,7 @@
  		(command "_change" (entlast) "" "_p" "_la" "creases" "")
  		;select and group the panel and tab
 		(setq topleft (list (car O) (cadr Npt)))
-		(setq bottomright (list (car P) (cadr Q)))
+		(setq bottomright (list (car P) (cadr R)))
 		(setq set1 (ssget "W" topleft bottomright))
 		(command "_.group" "c" "*" "panel and tab" set1 "")
 	)
@@ -141,7 +129,7 @@
 	)	
 )
 ;make polygon tab
-(command "_polygon" 5 "E" P O)
+(command "_polygon" n "E" P O)
 (if layers
 	(progn
 		;add the polygon to the outline
