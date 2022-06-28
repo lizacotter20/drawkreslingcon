@@ -18,6 +18,13 @@
 ;continue getting relevant parameters from user
 (setq a (getreal "\nEnter length of the edges of the top polygon:"))
 (setq b (getreal "\nEnter length of the edges of the bottom polygon:"))
+
+;check that a < b
+(cond 
+	((> a b) (print "the edge lengths of the top polygon need to be smaller than the edge lengths of the bottom polygon") (exit))
+	((= a b) (print "use the drawkresling program for drawing cylindrical kresling cell crease patterns") (exit))
+)
+
 (setq Npt (getpoint "\nPick starting point for first polygon edge:"))
 
 ;ask if the user wants the outline and creases in different layers
