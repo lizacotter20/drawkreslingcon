@@ -1,158 +1,179 @@
-(defun c:drawkreslingcon () ;concical kresling with max height and isosceles trapezoid panels
+(prompt "\nType drawkreslingcon to run.....")
+ 
+(defun c:drawkreslingcon ( / dcl_id flag Hstr H0str nstr astr bstr xstr ystr Npt crease_type hole diameterstr layers H H0 n a b diameter)
+     (print "c0ne baby")
 
-;get relevant parameters from user
-;(setq H (getreal "\nEnter deployed height:"))
-;(setq H0 (getreal "\nEnter folded height:"))
-(setq n (getint "\nEnter number of polygon edges:"))
+     ;flag is for discerning whether the dialog was canceled or hidden for starting point selection
+     (setq flag 5)
 
-;check the design constraint
-;(if (> (abs (- (expt H 2) (expt H0 2))) (expt (cot (/ pi n)) 2))
-    ;(progn
-       ;(print "Your parameters have failed to meet the design constraint |H^2 - H0^2| <= cot^2(pi/n)")
-       ;(print "Please adjust your parameters and try again")
-       ;(exit) 
-    ;)
-    ;(print '())
-;)
+     ;load the dialog 
+     (setq dcl_id (load_dialog "drawkreslingcon.dcl"))
 
-;continue getting relevant parameters from user
-(setq a (getreal "\nEnter length of the edges of the top polygon:"))
-(setq b (getreal "\nEnter length of the edges of the bottom polygon:"))
+     ;while the flag is not accept or cancel
+     (while (> flag 2)
+          ;make a new dialog
+          (if (not (new_dialog "drawkreslingcon" dcl_id))
+               (exit)
+          )
+          
+          ;set the values of the edit_boxes to their previous values, if there is one
+          (if (= Hstr nil)
+               (action_tile "H" "(setq Hstr $value)")
+               (set_tile "H" Hstr)
+          )
+          (if (= H0str nil)
+               (action_tile "H0" "(setq H0str $value)")
+               (set_tile "H0" H0str)
+          )
+          (if (= nstr nil)
+               (action_tile "n" "(setq nstr $value)")
+               (set_tile "n" nstr)
+          )
+          (if (= astr nil)
+               (action_tile "a" "(setq astr $value)")
+               (set_tile "a" astr)
+          )
+          (if (= bstr nil)
+               (action_tile "b" "(setq bstr $value)")
+               (set_tile "b" bstr)
+          )
+          (if (= xstr nil)
+               (progn
+                    (action_tile "x" "(setq xstr $value)")
+                    (setq xstr "0")
+               )
+               (set_tile "x" xstr)
+          )
+          (if (= ystr nil)
+               (progn
+                    (action_tile "y" "(setq ystr $value)")
+                    (setq ystr "0")
+               )
+               (set_tile "y" ystr)
+          )   
 
-;check that a < b
-(cond 
-	((> a b) (print "the edge lengths of the top polygon need to be smaller than the edge lengths of the bottom polygon") (exit))
-	((= a b) (print "use the drawkresling program for drawing cylindrical kresling cell crease patterns") (exit))
-)
+          ;update string values with the values in the boxes, if they've been changed
+          (action_tile "H" "(setq Hstr $value)")
+          (action_tile "H0" "(setq H0str $value)") 
+          (action_tile "n" "(setq nstr $value)")
+          (action_tile "a" "(setq astr $value)")
+          (action_tile "b" "(setq bstr $value)")
+          (action_tile "x" "(setq xstr $value)")
+          (action_tile "y" "(setq ystr $value)") 
 
-(setq Npt (getpoint "\nPick starting point for first polygon edge:"))
+          (if (= Npt nil)
+               (setq Npt (list (distof (get_tile "x")) (distof (get_tile "y"))))
+          )
 
-;ask if the user wants the outline and creases in different layers
-(setq bad_res T)
-(setq layers nil)
-(while bad_res
-	(setq response (getstring "\nWould you like the outline and creases to be in different layers (for laser cutting)? <Y/n>"))
-	(cond 
-		((= response "Y") (setq layers T) (setq bad_res nil)) 
-		((= response "y") (setq layers T) (setq bad_res nil))  
-		((= response "N") (setq layers nil) (setq bad_res nil))  
-		((= response "n") (setq layers nil) (setq bad_res nil)) 
-		(T (print "Invalid response, please type Y, y, N, or n")) 
-	)
-)
+          ;remember which radio button was chosen last time
+          (cond
+              ((= crease_type nil) (setq crease_type "m"))
+              ((= crease_type "m") (print "mountain") (set_tile "mountain" "1"))
+              ((= crease_type "v") (print "valley") (set_tile "valley" "1")) 
+              ((= crease_type "p") (print "polygon") (set_tile "polygon" "1")) 
+          )
 
-;the second point is the desired distance from the user selected first point
-(setq M (list (+ (car Npt) a) (cadr Npt))) 
-(print M)
+          ;radio buttons
+          (action_tile "mountain" "(setq crease_type \"m\")")
+          (action_tile "valley" "(setq crease_type \"v\")")
+          (action_tile "polygon" "(setq crease_type \"p\")")
 
-;useful terms to clean up the calculations
-;(setq H0sqr (expt H0 2))
-;(print H0sqr)
-;(setq Hsqr (expt H 2))
-(setq param (/ pi n))
+          ;the diameter edit_box is only enabled when the hole toggle is turned on
+          ;(mode_tile "diameter" 1)
+          (if (= hole nil)
+               (progn
+                    (action_tile "hole" "(mode_tile \"diameter\" (- 1 (atoi $value))) (setq hole $value)")
+                    (mode_tile "diameter" 1)
+               )
+               (progn
+                    (set_tile "hole" hole)
+                    (mode_tile "diameter" (- 1 (atoi hole)))
+                    (set_tile "diameter" diameterstr)
+               )
+          )
+          (action_tile "hole" "(mode_tile \"diameter\" (- 1 (atoi $value))) (setq hole $value)")
+          (action_tile "diameter" "(setq diameterstr $value)") 
+          
+          ;remember whether the user previously had the layers option turned on
+          (if (= layers nil)
+               (action_tile "layers" "(setq layers $value)")
+               (set_tile "layers" layers)
+          )
+          (action_tile "layers" "(setq layers $value)")
 
-;radii of the two polygons
-(setq rsmall (/ a (* 2 (sin param))))
-(setq Rlarge (/ b (* 2 (sin param))))
+          (print "layers")
+          (print layers)
+          (print "hole")
+          (print hole)
 
-;more useful terms to clean up the calculations
-(setq rssqr (expt rsmall 2))
-(setq Rlsqr (expt Rlarge 2))
+          ;in order for the user to be able to press ok, make sure the design constraints are not violated and that the parameter types are correct
+          (action_tile "accept" "(checktypescon)")
+          ;(action_tile "accept" "(done_dialog 1)")
+          (print "hole2")
 
-;do the calculations for the conical Kresling
-;(setq phi (- (/ pi 2) param))
-;(setq phi (- pi (* 2 param)))
-;(setq c (expt (- (+ Hsqr (+ rssqr Rlsqr)) (* (* (* 2 rsmall) Rlarge) (cos phi))) 0.5))
-(setq c_fs (expt (+ (+ rssqr Rlsqr) (* (* (* 2 rsmall) Rlarge) (cos (* 2 param)))) 0.5))
-;(setq d (expt (- (+ Hsqr (+ rssqr Rlsqr)) (* (* (* 2 rsmall) Rlarge) (cos (+ phi (* 2 param))))) 0.5))
-;(setq beta (acos (/ (- (+ (expt b 2) (expt c 2)) (expt d 2)) (* (* 2 b) c))))
-(setq beta (acos (/ (- b a) (* 2 c_fs))))
-(print "did some calculations")
+          ;set canceled to true if the dialog was canceled so we dont do unecessary calculations + drawings
+          (action_tile "cancel" "(setq canceled T)")
+          ;(action_tile "cancel" "(done_dialog 0)")
 
-;angles in the quadrilateral for finding xy coords of the other 2 points in the panel
-"""
-(setq cosNMO (/ (- (+ (expt a 2) (expt b 2)) (expt c 2)) (* (* 2 a) b)))
-(setq NMO (acos cosNMO))
-(setq OMP (acos (/ (- (+ (expt c 2) (expt d 2)) (expt b 2)) (* (* 2 c) d))))
-"""
+          ;flag to hide the dialog box is 5
+          (action_tile "select_pt" "(done_dialog 5)")
 
-;other two points in the panel
-(setq O (list (- (car Npt) (/ (- b a) 2)) (- (cadr Npt) (* c_fs (sin beta)))))
-(print O)
-(setq P (list (+ (car M) (/ (- b a) 2)) (- (cadr M) (* c_fs (sin beta)))))
-(print P)
-(print "panel points")
+          ;set the flag to whatever start_dialog pulls from done_dialog
+          (setq flag (start_dialog))
 
-;find the center of the small polygon
-(setq apothem (/ a (* 2 (tan param))))
-(setq p0 (list (+ (car Npt) (* 0.5 a)) (+ (cadr Npt) apothem)))
-(print "center")
+          ;if the select point button was clicked 
+          (if (= flag 5)
+               ;get the point from the user
+               (progn
+                    (setq Npt (getpoint))
+                    (setq xstr (rtos (car Npt)))
+                    (setq ystr (rtos (cadr Npt)))
+               )
+          )
+     )
 
-;calculations to find xy coords of the tab points
-(setq tabwidth (* 0.5 apothem)) 
-(setq OPR (/ (* (- n 2) param) 2))
-(print "more geometric calcs")
+     (unload_dialog dcl_id)
+     """
+     (print canceled)
+     (print crease_type)
+     
+     (print (car Npt))
+     (print (cadr Npt))
+     (print (distof Hstr))
+     (print (distof H0str))       
+     (print (atoi nstr))
+     (print (distof bstr)) 
+     """
+     (print "layers")
+     (print layers)
+     (print "hole")
+     (print hole)
+     
+     (print "diameter")
+     (print diameterstr)
 
-;two points for the tab
-(setq Q (list (+ (car O) (* (* 0.5 apothem) (cot OPR))) (- (cadr O) (* 0.5 apothem))))
-(setq R (list (- (car P) (* (* 0.5 apothem) (cot OPR))) (- (cadr P) (* 0.5 apothem))))
-(print "~tab points~")
+     (print xstr)
+     (print ystr)
 
-(if layers
-	(progn
-		;draw the outline
-		(command "_pline" Npt O Q R P M *Cancel*)
-		(command "_layer" "_n" "outline" "")
-		(command "_layer" "_color" 4 "outline" "")
- 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
- 		;draw the creases
-		(command "_pline" Npt M O P *Cancel*)
-		(command "_layer" "_n" "creases" "")
-		(command "_layer" "_color" 3 "creases" "")
- 		(command "_change" (entlast) "" "_p" "_la" "creases" "")
- 		;select and group the panel and tab
-		(setq topleft (list (car O) (cadr Npt)))
-		(setq bottomright (list (car P) (cadr R)))
-		(setq set1 (ssget "W" topleft bottomright))
-		(command "_.group" "c" "*" "panel and tab" set1 "")
-	)
-	;draw one side panel and one tab
-	(command "_pline" M Npt O P M O Q R P *Cancel*)
-)
-;(print "drew one panel and one tab")
-(setq firstt 1)
-(repeat (- n 1)
-	(if (= firstt 1)
-		(progn
-			(command "rotate" (entlast) "" p0 (/ 360.0 n) "")
-			(setq firstt 0)
-			(print "first")
-			(print firstt)
-		)
-		(progn
-			(command "rotate" (entlast) "" p0 "C" (/ 360.0 n))
-			(print firstt)
-		)
-	)	
-)
-;make polygon tab
-(command "_polygon" n "E" P O)
-(if layers
-	(progn
-		;add the polygon to the outline
-		(command "_change" (entlast) "" "_p" "_la" "outline" "")
-		;delete the crease segment of the polygon
-		(command "_break" O P)
-		;draw the rest of the outline
-		(command "_line" Npt O *Cancel*)
- 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
- 		(command "_line" M P *Cancel*)
- 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
- 		;draw the creases
-		(command "_pline" Npt M O P *Cancel*)
- 		(command "_change" (entlast) "" "_p" "_la" "creases" "")
-	)
-	;draw one side panel and one tab
-	(command "_pline" M O N M P *Cancel*)
-)
+     (if canceled
+          (setq canceled nil)
+          (progn
+               (print "not canceled ig")
+               ;convert string values to reals or ints
+               (setq H (distof Hstr))
+               (setq H0 (distof H0str))
+               (setq n (atoi nstr))
+               (setq a (distof astr))
+               (setq b (distof bstr))
+               (if (= hole "1")
+               	(setq diameter (distof diameterstr))
+               	(setq diameter 0)
+               )
+               ;get the latest point from the box
+               (setq Npt (list (distof xstr) (distof ystr)))
+               ;call drawkresling
+               (drawkreslingmountaincon H H0 n a b Npt crease_type hole diameter layers)
+          )
+     )
+     (princ)
 )
