@@ -1,10 +1,6 @@
-(defun drawkreslingmountaincon (H H0 n a b Npt crease_type hole diameter layers / M H0sqr Hsqr param rsmall Rlarge rssqr Rlsqr phi0 c v beta cosNMO NMO OMP O P apothem p0 tabwidth OPR e POM QOYm MPXp RPYm Q R topleft bottomright set1 firstt) 
+(defun drawkreslingmountaincon (H H0 n a b Npt crease_type hole diameter layers / M H0sqr Hsqr param rsmall Rlarge rssqr Rlsqr phi0 c v beta cosNMO NMO OMP O P apothem p0 newP apothemb tabwidth j Qu Ru Q R ptList set1 firstt p00) 
 
 	(print "still need to fix that weird thing")
-	(print "hole")
-	(print hole)
-	(print "diameterr")
-	(print diameter)
 
 	;the second point is the desired distance from the user selected first point
 	(setq M (list (+ (car Npt) a) (cadr Npt))) 
@@ -27,51 +23,35 @@
 	(setq c (expt (- (+ H0sqr (+ rssqr Rlsqr)) (* (* (* 2 rsmall) Rlarge) (cos phi0))) 0.5))
 	(setq v (expt (- (+ H0sqr (+ rssqr Rlsqr)) (* (* (* 2 rsmall) Rlarge) (cos (+ phi0 (* 2 param))))) 0.5))
 	(setq beta (acos (/ (- (+ (expt b 2) (expt c 2)) (expt v 2)) (* (* 2 b) c))))
-	(print "did some calculations")
 
 	;angles in the quadrilateral for finding xy coords of the other 2 points in the panel
 	(setq cosNMO (/ (- (+ (expt a 2) (expt v 2)) (expt c 2)) (* (* 2 a) v)))
 	(setq NMO (acos cosNMO))
 	(setq OMP (acos (/ (- (+ (expt c 2) (expt v 2)) (expt b 2)) (* (* 2 c) v))))
-	(print "~angles~")
 
 	;other two points in the panel
 	(setq O (list (- (car M) (* v cosNMO)) (- (cadr M) (* v (sin NMO)))))
-	(print O)
 	(setq P (list (- (car M) (* c (cos (+ NMO OMP)))) (- (cadr M) (* c (sin (+ NMO OMP))))))
-	(print P)
-	(print "panel points")
 
 	;find the center of the small polygon
 	(setq apothem (/ a (* 2 (tan param))))
 	(setq p0 (list (+ (car Npt) (* 0.5 a)) (+ (cadr Npt) apothem)))
-	(print "center")
 
-	;this is a lot of geometry... i wonder if i should make a new user coordinate system relative to OP to make this easier to read
-	;calculations to find xy coords of the tab points
-	"""
-	(setq tabwidth (* 0.5 apothem)) 
-	(setq OPR (/ (* (- n 2) param) 2))
-	(setq e (* tabwidth (csc OPR)))
-	(setq POM (- pi (+ OMP beta)))
-	(setq QOYm (- (/ pi 2) (- (+ POM OPR) NMO)))
-	(setq MPXp (+ NMO OMP))
-	(setq RPYm (- (* 2 pi) (+ (+ (+ MPXp beta) OPR) (/ pi 2))))
-
-	;two points for the tab
-	(setq Q (list (+ (car O) (* e (sin QOYm))) (- (cadr O) (* e (cos QOYm)))))
-	(setq R (list (- (car P) (* e (sin RPYm))) (- (cadr P) (* e (cos RPYm)))))
-	"""
+	;set up new coordinate system with OP as the x-axis for drawing the tab
 	(setq newP (list (- (car P) (car O)) (- (cadr P) (cadr O))))
 	(command "_ucs" O newP "")
 	(command "_ucs" "NA" "S" "b")
-	(setq tabwidth (* 0.5 apothem)) 
+	(setq apothemb (/ b (* 2 (tan param))))
+	(setq tabwidth (* (/ 1.0 3.0) apothemb)) 
 	(setq j (/ tabwidth (tan (/ (* param (- n 2)) 2))))
 	;two points for the tab
-	(setq Q (list (+ (car O) j) (- (cadr O) tabwidth)))
-	(setq R (list (- (car P) j) (- (cadr P) tabwidth)))
+	(setq Qu (list j (* -1 tabwidth)))
+	(setq Ru (list (- b j) (* -1 tabwidth)))
+	(setq Q (trans Qu 1 0))
+	(setq R (trans Ru 1 0))
 	(command "_ucs" "W")
 
+	;start drawing
 	(if (= layers "1") 
 		(progn
 			;draw the outline
@@ -84,31 +64,27 @@
 			(command "_layer" "_n" "creases" "")
 			(command "_layer" "_color" 3 "creases" "")
 	 		(command "_change" (entlast) "" "_p" "_la" "creases" "")
-	 		;select and group the panel and tab
-			(setq topleft (list (car O) (cadr Npt)))
-			(setq bottomright (list (car M) (cadr R)))
-			(setq set1 (ssget "W" topleft bottomright))
-			(command "_.group" "c" "*" "panel and tab" set1 "")
+	 		;make a group out of the panel and tab
+			(setq ptList (list M Npt O P M O Q R))
+			(setq set1 (ssget "F" ptList))
+			(command "_.group" "c" "panel_and_tab" "panel and tab" set1 "")
 		)
 		;draw one side panel and one tab
 		(command "_pline" M Npt O P M O Q R P *Cancel*)
 	)
-	;(print "drew one panel and one tab")
+
+	;rotate panel and tab
 	(setq firstt 1)
 	(repeat (- n 1)
 		(if (= firstt 1)
 			(progn
 				(command "rotate" (entlast) "" p0 (/ 360.0 n) "")
 				(setq firstt 0)
-				(print "first")
-				(print firstt)
 			)
-			(progn
-				(command "rotate" (entlast) "" p0 "C" (/ 360.0 n))
-				(print firstt)
-			)
+			(command "rotate" (entlast) "" p0 "C" (/ 360.0 n))
 		)	
 	)
+
 	;make polygon tab
 	(command "_polygon" n "E" P O)
 	(if (= layers "1")
@@ -125,6 +101,8 @@
 	 		;draw the creases
 			(command "_pline" Npt M O P *Cancel*)
 	 		(command "_change" (entlast) "" "_p" "_la" "creases" "")
+	 		;ungroup the panel and tab group
+	 		(command "_ungroup" "NA" "panel_and_tab")
 		)
 		;draw one side panel and one tab
 		(command "_pline" M O Npt M P *Cancel*)
@@ -132,14 +110,6 @@
 
 	(if (= hole "1")
 		(progn
-			;find radius of tab polygon
-			;(setq r (/ b (* 2 (sin param))))
-			;some terms to clean up the calculations
-			;(setq k (/ (expt apothem 2) (- (* 2 apothem) b)))
-			;(setq angle6 (atan (* (- (/ k r) (sin OPR)) (sec OPR))))
-			;(setq yhole (* k (cos angle6)))
-			;(setq xhole (expt (- (expt r 2) (expt yhole 2)) 0.5))
-
 			;draw the circle for the top tab
 			(command "_circle" p0 (/ diameter 2))
 			(if (= layers "1")
@@ -147,8 +117,7 @@
 			)
 
 			;find center of tab polygon
-			(command "_ucs" "b")
-			(setq apothemb (/ b (* 2 (tan param))))
+			(command "_ucs" "P")
 			(setq p00 (list (/ b 2) (* -1 apothemb)))
 
 			;draw the circle for the bottom tab
@@ -156,8 +125,9 @@
 			(if (= layers "1")
 				(command "_change" (entlast) "" "_p" "_la" "outline" "")
 			)
-			(command "_ucs" "NA" "D" "b")
 			(command "_ucs" "W")
 		)
 	)
+	;delete the ucs
+	(command "_ucs" "NA" "D" "b")
 ) 
