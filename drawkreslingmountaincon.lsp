@@ -1,5 +1,22 @@
 (defun drawkreslingmountaincon (H H0 n a b Npt crease_type hole diameter layers / M H0sqr Hsqr param rsmall Rlarge rssqr Rlsqr phi0 c v beta cosNMO NMO OMP O P apothem p0 newP apothemb tabwidth j Qu Ru Q R ptList set1 firstt p00) 
 
+	(defun *error* (msg)
+		(if (= msg "Function cancelled")
+			(progn
+				(print "Function was canceled, exploding groups and deleting the user frame")
+				(command-s "_ucs" "NA" "D" "b")
+				(command-s "_ungroup" "NA" "panel_and_tab" "")
+				(command "_ucs" "W")
+			)
+			(progn
+				(print "Error thrown, exploding groups and deleting the user frame")
+				(command-s "_ucs" "NA" "D" "b")
+				(command-s "_ungroup" "NA" "panel_and_tab" "")
+				(command "_ucs" "W")
+			)
+		)
+	)
+
 	(print "still need to fix that weird thing")
 
 	;the second point is the desired distance from the user selected first point
@@ -50,6 +67,12 @@
 	(setq Q (trans Qu 1 0))
 	(setq R (trans Ru 1 0))
 	(command "_ucs" "W")
+
+	;zoom to drawing area
+	(setq halfwindowside (+ (+ apothem (abs (cadr R))) (* 4 Rlarge)))
+	(setq bottomleft (list (- (car p0) halfwindowside) (- (cadr p0) halfwindowside)))
+	(setq topright (list (+ (car p0) halfwindowside) (+ (cadr p0) halfwindowside)))
+	(command "_zoom" bottomleft topright)
 
 	;start drawing
 	(if (= layers "1") 
