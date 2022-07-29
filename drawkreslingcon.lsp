@@ -72,10 +72,19 @@
               ((= crease_type_con "p") (print "polygon") (set_tile "polygon" "1")) 
           )
 
+          ;remember which radio button was chosen last time
+          (cond
+              ((= chir_con nil) (setq chir_con "cw"))
+              ((= chir_con "cw") (set_tile "cw" "1"))
+              ((= chir_con "ccw") (set_tile "ccw" "1"))
+          )
+
           ;radio buttons
           (action_tile "mountain" "(setq crease_type_con \"m\")")
           (action_tile "valley" "(setq crease_type_con \"v\")")
           (action_tile "polygon" "(setq crease_type_con \"p\")")
+          (action_tile "cw" "(setq chir_con \"cw\")")
+          (action_tile "ccw" "(setq chir_con \"ccw\")")
 
           ;the diameter edit_box is only enabled when the hole toggle is turned on
           ;(mode_tile "diameter" 1)
@@ -171,7 +180,11 @@
                ;get the latest point from the box
                (setq Npt (list (distof xstrcon) (distof ystrcon)))
                ;call drawkresling
-               (drawkreslingmountaincon H H0 n a b Npt crease_type_con holecon diameter layerscon)
+               (cond
+                    ((= crease_type_con "m") (drawkreslingmountaincon H H0 n a b Npt crease_type_con chir_con holecon diameter layerscon))
+                    ((= crease_type_con "v") (drawkreslingvalleycon H H0 n a b Npt crease_type_con chir_con holecon diameter layerscon)) 
+                    ((= crease_type_con "p") (drawkreslingmountaincon H H0 n a b Npt crease_type_con chir_con holecon diameter layerscon))
+               )
           )
      )
      (princ)

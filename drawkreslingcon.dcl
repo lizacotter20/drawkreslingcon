@@ -93,6 +93,19 @@ drawkreslingcon : dialog { label = "Draw Conical Kresling";
 				label = "Polygon";
 			}
 	}
+
+	: boxed_radio_column {label = "Chirality";	
+			: radio_button {
+				key = "cw";
+				label = "Clockwise";
+				value = "1";
+			}
+			: radio_button {
+				key = "ccw";
+				label = "Counterclockwise";
+			}
+	}
+	
 	// i think it would be better if this had less text and instead the user could hover over a shorter description and get more detail then
 	: boxed_column {label = "More Options";	
 		: row {

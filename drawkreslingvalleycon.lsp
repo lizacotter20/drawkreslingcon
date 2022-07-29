@@ -1,4 +1,4 @@
-(defun drawkreslingmountaincon (H H0 n a b Npt crease_type chir hole diameter layers / M H0sqr Hsqr param rsmall Rlarge rssqr Rlsqr phi0 c v beta cosNMO NMO OMP O P apothem p0 newP apothemb tabwidth j Qu Ru Q R ptList set1 firstt p00) 
+(defun drawkreslingvalleycon (H H0 n a b Npt crease_type chir hole diameter layers / M H0sqr Hsqr param rsmall Rlarge rssqr Rlsqr phi0 c v beta cosNMO NMO OMP O P apothem p0 newP apothemb tabwidth j Qu Ru Q R ptList set1 firstt p00) 
 
 	(defun *error* (msg)
 		(if (= msg "Function cancelled")
@@ -42,13 +42,14 @@
 	(setq beta (acos (/ (- (+ (expt b 2) (expt c 2)) (expt v 2)) (* (* 2 b) c))))
 
 	;angles in the quadrilateral for finding xy coords of the other 2 points in the panel
-	(setq cosNMO (/ (- (+ (expt a 2) (expt v 2)) (expt c 2)) (* (* 2 a) v)))
-	(setq NMO (acos cosNMO))
-	(setq OMP (acos (/ (- (+ (expt c 2) (expt v 2)) (expt b 2)) (* (* 2 c) v))))
+	(setq ONP (acos (/ (- (+ (expt v 2) (expt c 2)) (expt b 2)) (* (* 2 v) c))))
+	(setq PNM (acos (/ (- (+ (expt a 2) (expt c 2)) (expt v 2)) (* (* 2 a) c))))
+	(setq ONX (- pi (+ PNM ONP)))
+	(setq PNY (- (/ pi 2) (+ ONX ONP)))
 
 	;other two points in the panel
-	(setq O (list (- (car M) (* v cosNMO)) (- (cadr M) (* v (sin NMO)))))
-	(setq P (list (- (car M) (* c (cos (+ NMO OMP)))) (- (cadr M) (* c (sin (+ NMO OMP))))))
+	(setq O (list (- (car Npt) (* v (cos ONX))) (- (cadr Npt) (* v (sin ONX)))))
+	(setq P (list (- (car Npt) (* c (sin PNY))) (- (cadr Npt) (* c (cos PNY)))))
 
 	;find the center of the small polygon
 	(setq apothem (/ a (* 2 (tan param))))
@@ -83,17 +84,17 @@
 			(command "_layer" "_color" 4 "outline" "")
 	 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
 	 		;draw the creases
-			(command "_pline" Npt M O P *Cancel*)
+			(command "_pline" M Npt P O *Cancel*)
 			(command "_layer" "_n" "creases" "")
 			(command "_layer" "_color" 3 "creases" "")
 	 		(command "_change" (entlast) "" "_p" "_la" "creases" "")
 	 		;make a group out of the panel and tab
-			(setq ptList (list M Npt O P M O Q R))
+			(setq ptList (list Npt P O Npt M P R Q O))
 			(setq set1 (ssget "F" ptList))
 			(command "_.group" "c" "panel_and_tab" "panel and tab" set1 "")
 		)
 		;draw one side panel and one tab
-		(command "_pline" M Npt O P M O Q R P *Cancel*)
+		(command "_pline"  Npt P O Npt M P R Q O *Cancel*)
 	)
 
 	;make group for everything
@@ -134,7 +135,7 @@
 	 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
 	 		(ssadd (entlast) biggroup)
 	 		;draw the creases
-			(command "_pline" Npt M O P *Cancel*)
+			(command "_pline" M Npt P O *Cancel*)
 	 		(command "_change" (entlast) "" "_p" "_la" "creases" "")
 	 		(ssadd (entlast) biggroup)
 	 		;ungroup the panel and tab group
@@ -142,7 +143,7 @@
 		)
 		;finish first panel
 		(progn
-			(command "_pline" M O Npt M P *Cancel*)
+			(command "_pline" O Npt M P Npt *Cancel*)
 			(ssadd (entlast) biggroup)
 		)
 	)
@@ -182,4 +183,4 @@
 
 	;delete the ucs
 	(command "_ucs" "NA" "D" "b")
-) 
+)
