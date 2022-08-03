@@ -1,4 +1,4 @@
-(defun drawkreslingmountaincon (H H0 n a b Npt crease_type chir hole diameter layers / M H0sqr Hsqr param rsmall Rlarge rssqr Rlsqr phi0 c v beta cosNMO NMO OMP O P apothem p0 newP apothemb tabwidth j Qu Ru Q R ptList set1 firstt p00) 
+(defun drawkreslingpolycon (H H0 n a b Npt crease_type chir hole diameter layers / M H0sqr Hsqr param rsmall Rlarge rssqr Rlsqr phi0 c v beta cosNMO NMO OMP O P apothem p0 newP apothemb toptabwidth bottomtabwidth j_a j_b Qu Ru Q R ptList set1 firstt p00) 
 
 	(defun *error* (msg)
 		(if (= msg "Function cancelled")
@@ -54,16 +54,22 @@
 	(setq apothem (/ a (* 2 (tan param))))
 	(setq p0 (list (+ (car Npt) (* 0.5 a)) (+ (cadr Npt) apothem)))
 
+	;two points for the top tab
+	(setq toptabwidth (* (/ 1.0 3.0) apothem)) 
+	(setq j_a (/ toptabwidth (tan (/ (* param (- n 2)) 2))))
+	(setq U (list (+ (car Npt) j_a) (+ (cadr Npt) toptabwidth)))
+	(setq W (list (- (car M) j_a) (+ (cadr M) toptabwidth)))
+
 	;set up new coordinate system with OP as the x-axis for drawing the tab
 	(setq newP (list (- (car P) (car O)) (- (cadr P) (cadr O))))
 	(command "_ucs" O newP "")
 	(command "_ucs" "NA" "S" "b")
 	(setq apothemb (/ b (* 2 (tan param))))
-	(setq tabwidth (* (/ 1.0 3.0) apothemb)) 
-	(setq j (/ tabwidth (tan (/ (* param (- n 2)) 2))))
+	(setq bottomtabwidth (* (/ 1.0 3.0) apothemb)) 
+	(setq j_b (/ bottomtabwidth (tan (/ (* param (- n 2)) 2))))
 	;two points for the tab
-	(setq Qu (list j (* -1 tabwidth)))
-	(setq Ru (list (- b j) (* -1 tabwidth)))
+	(setq Qu (list j_b (* -1 bottomtabwidth)))
+	(setq Ru (list (- b j_b) (* -1 bottomtabwidth)))
 	(setq Q (trans Qu 1 0))
 	(setq R (trans Ru 1 0))
 	(command "_ucs" "W")
@@ -77,60 +83,131 @@
 	;start drawing
 	(if (= layers "1") 
 		(progn
-			;draw the outline
-			(command "_pline" Npt O Q R P M *Cancel*)
+			;draw the top tab
+			(command "_pline" Npt U W M *Cancel*)
 			(command "_layer" "_n" "outline" "")
 			(command "_layer" "_color" 4 "outline" "")
 	 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
+	 		(command "_pline" P R Q O *Cancel*)
+	 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
 	 		;draw the creases
-			(command "_pline" Npt M O P *Cancel*)
+			(command "_pline" Npt M O P M *Cancel*)
 			(command "_layer" "_n" "creases" "")
 			(command "_layer" "_color" 3 "creases" "")
 	 		(command "_change" (entlast) "" "_p" "_la" "creases" "")
 	 		;make a group out of the panel and tab
-			(setq ptList (list M Npt O P M O Q R))
+			(setq ptList (list P R Q O P M W U Npt M O))
 			(setq set1 (ssget "F" ptList))
 			(command "_.group" "c" "panel_and_tab" "panel and tab" set1 "")
 		)
 		;draw one side panel and one tab
-		(command "_pline" M Npt O P M O Q R P *Cancel*)
+		(command "_pline" P R Q O P M W U Npt M O *Cancel*)
 	)
 
 	;make group for everything
 	(setq biggroup (ssadd))
 
+	(setq PMY (- (/ pi 2) (+ NMO OMP)))
+	(setq Mmove (list (+ (car O) (* c (sin PMY))) (+ (cadr O) (* c (cos PMY)))))
+	(setq ONM (acos (/ (- (+ (expt a 2) (expt c 2)) (expt v 2)) (* (* 2 a) c))))
+	(setq NrNY (- (* 2 pi) (+ (/ pi 2) (+ (+ ONM NMO) OMP)))) 
+	(print NrNY)
+	(print (+ (+ (+ (+ NrNY NMO) OMP) ONM) (/ pi 2)))
+	(setq Nrot (list (- (car Npt) (* a (sin NrNY))) (+ (cadr Npt) (* a (cos NrNY)))))
+	(print "NROT")
+	(print (car Nrot))
+	(print (cadr Nrot))
+	(setq newNpt (list (- (car Npt) (car Nrot)) (- (cadr Npt) (cadr Nrot))))
+	(print "NEWNPT")
+	(print (car newNpt))
+	(print (cadr newNpt))
+
 	;rotate panel and tab
-	(setq firstt 1)
+	;(setq firstt 1)
+	(setq i 0)
 	(repeat (- n 1)
-		(if (= firstt 1)
+		(if (= i 0)
 			(progn
-				(command "rotate" (entlast) "" p0 (/ 360.0 n) "")
+				;move the tab then rotate it into the correct position
+				(command "move" (entlast) "" P O "")
+				
+				(command "rotate" (entlast) "" O "R" O Mmove Npt)
 				(ssadd (entlast) biggroup)
 				(command "_.group" "c" "first_rot" "first rotation" biggroup "")
-				(setq firstt 0)
+				;make a new user frame for the next rotation
+				
+				;(command "line" Nrot Npt "")
+				(command "_ucs" Nrot newNpt "")
+				;(command "_line" Nrot newNpt "")
+				;(command "_ucs" "NA" "S" "bruh")
+				;(setq hehe (+ liza 2))
+				;(setq firstt 0)
+				(setq i (+ i 1))
 			)
 			(progn
-				(command "rotate" (entlast) "" p0 "C" (/ 360.0 n))
+				(command "copy" (entlast) "" P O "")
+				(command "rotate" (entlast) "" O "R" O Mmove Npt)
 				(ssadd (entlast) biggroup)
+				(command "_ucs" Nrot newNpt "")
+				;if this is our last time through
+				(if (= i (- n 2))
+					(progn
+						;set up new coordinate system for drawing the end tab
+						;(setq Nt (list (+ (car N) (* (+ i 1) b)) (cadr p1)))
+						;(setq Ot (list (+ (car p4) (* (+ i 1) b)) (cadr p4)))
+						(setq newNpt2 (list (- (car Npt) (car O)) (- (cadr Npt) (cadr O))))
+						(command "_ucs" O newNpt2 "")
+						;(command "_ucs" "NA" "S" "bruh")
+						(setq distNO (expt (+ (expt (- (cadr Npt) (cadr O)) 2) (expt (- (car Npt) (car O)) 2)) 0.5))
+						(setq newNptt (list distNO 0))
+						;another tabwidth
+						(setq endtabwidth (/ (+ bottomtabwidth toptabwidth) 2))
+						(setq j_e (/ endtabwidth (tan (/ (* param (- n 2)) 2))))
+						;two points for the tab
+						(setq tabN (list (- (car newNptt) j_e) endtabwidth))
+						(setq tabO (list j_e endtabwidth))
+						;(command "_ucs" "NA" "S" "endtab")
+						;draw the end tab
+						(setq origin (list 0 0))
+						(command "_pline" newNptt tabN tabO origin *Cancel*)
+						(if (= layers "1")
+							;add the tab to the outline
+							(command "_change" (entlast) "" "_p" "_la" "outline" "")
+						)
+						(ssadd (entlast) biggroup)
+						(command "_line" newNptt origin *Cancel*)
+						(if (= layers "1")
+							;last crease
+							(command "_change" (entlast) "" "_p" "_la" "creases" "")
+						)
+						(ssadd (entlast) biggroup)
+						(command "_ucs" "W")
+					)
+				)
+				(setq i (+ i 1))
 			)
 		)	
 	)
 
-	;make polygon tab
+	;make polygon tabs
 	(command "_polygon" n "E" P O)
-	(ssadd (entlast) biggroup) 
+	(if (= layers "1")
+		;add the tab to the outline
+		(command "_change" (entlast) "" "_p" "_la" "outline" "")
+	)
+	(ssadd (entlast) biggroup)
+	(command "_polygon" n "E" Npt M) 
+	(ssadd (entlast) biggroup)
 
 	(if (= layers "1")
 		(progn
 			;add the polygon to the outline
 			(command "_change" (entlast) "" "_p" "_la" "outline" "")
-			;delete the crease segment of the polygon
+			;delete the crease segments of the polygons
 			(command "_break" O P)
-			;draw the rest of the outline
-			(command "_line" Npt O *Cancel*)
-	 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
-	 		(ssadd (entlast) biggroup)
-	 		(command "_line" M P *Cancel*)
+			(command "_break" Npt M)
+			;draw the last segment of the outline
+			(command "_line" M P *Cancel*)
 	 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
 	 		(ssadd (entlast) biggroup)
 	 		;draw the creases
@@ -142,7 +219,7 @@
 		)
 		;finish first panel
 		(progn
-			(command "_pline" M O Npt M P *Cancel*)
+			(command "_pline" Npt M O P M *Cancel*)
 			(ssadd (entlast) biggroup)
 		)
 	)
@@ -157,7 +234,7 @@
 			(ssadd (entlast) biggroup)
 
 			;find center of tab polygon
-			(command "_ucs" "P")
+			(command "_ucs" "R" "b")
 			(setq p00 (list (/ b 2) (* -1 apothemb)))
 
 			;draw the circle for the bottom tab

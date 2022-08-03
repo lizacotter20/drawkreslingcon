@@ -183,7 +183,7 @@
                (cond
                     ((= crease_type_con "m") (drawkreslingmountaincon H H0 n a b Npt crease_type_con chir_con holecon diameter layerscon))
                     ((= crease_type_con "v") (drawkreslingvalleycon H H0 n a b Npt crease_type_con chir_con holecon diameter layerscon)) 
-                    ((= crease_type_con "p") (drawkreslingmountaincon H H0 n a b Npt crease_type_con chir_con holecon diameter layerscon))
+                    ((= crease_type_con "p") (drawkreslingpolycon H H0 n a b Npt crease_type_con chir_con holecon diameter layerscon))
                )
           )
      )

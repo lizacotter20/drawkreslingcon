@@ -70,7 +70,7 @@
 	(command "_ucs" "W")
 
 	;zoom to drawing area
-	(setq halfwindowside (+ (+ apothem (abs (cadr R))) (* 4 Rlarge)))
+	(setq halfwindowside (+ (+ apothem (- (cadr Npt) (cadr R))) (* 4 Rlarge)))
 	(setq bottomleft (list (- (car p0) halfwindowside) (- (cadr p0) halfwindowside)))
 	(setq topright (list (+ (car p0) halfwindowside) (+ (cadr p0) halfwindowside)))
 	(command "_zoom" bottomleft topright)
@@ -177,10 +177,11 @@
 		(progn
 			(setq mid (list (+ (car Npt) (/ a 2)) (cadr Npt)))
 			(command "mirror" biggroup "" p0 mid "Y")
-			(command "_ungroup" "NA" "first_rot")
 		)
 	)
 
 	;delete the ucs
 	(command "_ucs" "NA" "D" "b")
+	;delete the group
+	(command "_ungroup" "NA" "first_rot")
 )
