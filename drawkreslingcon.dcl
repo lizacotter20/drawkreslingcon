@@ -6,44 +6,43 @@ drawkreslingcon : dialog { label = "Draw Conical Kresling";
 		label = "Geometry Parameters";
 		key = "geometry";	
 		: edit_box {
-		label = "Enter deployed height, H:";
-		alignment = right;
-		edit_limit = 10;
-		edit_width = 10;
-		key = "H";
-		// value = 0;
+			label = "Enter deployed height, H:";
+			alignment = right;
+			edit_limit = 10;
+			edit_width = 10;
+			key = "H";
 		}
 
 		: edit_box { 
-		label = "Enter folded height, H0:";
-		alignment = right;
-		edit_limit = 10;
-		edit_width = 10;
-		key = "H0";
+			label = "Enter folded height, H0:";
+			alignment = right;
+			edit_limit = 10;
+			edit_width = 10;
+			key = "H0";
 		}
 
 		: edit_box { 
-		label = "Enter number of polygon edges, n:";
-		alignment = right;
-		edit_limit = 10;
-		edit_width = 10;
-		key = "n";
+			label = "Enter number of polygon edges, n:";
+			alignment = right;
+			edit_limit = 10;
+			edit_width = 10;
+			key = "n";
 		}
 
 		: edit_box { 
-		label = "Enter length of the top polygon edges, a:";
-		alignment = right;
-		edit_limit = 10;
-		edit_width = 10;
-		key = "a";
+			label = "Enter length of the top polygon edges, a:";
+			alignment = right;
+			edit_limit = 10;
+			edit_width = 10;
+			key = "a";
 		}
 
 		: edit_box { 
-		label = "Enter length of the bottom polygon edges, b:";
-		alignment = right;
-		edit_limit = 10;
-		edit_width = 10;
-		key = "b";
+			label = "Enter length of the bottom polygon edges, b:";
+			alignment = right;
+			edit_limit = 10;
+			edit_width = 10;
+			key = "b";
 		}
 	}
 	: boxed_column {label = "Insertion point";	
@@ -79,31 +78,31 @@ drawkreslingcon : dialog { label = "Draw Conical Kresling";
 	}
 	// would be SO COOL if when you hovered over each of these an image popped up that showed what each looks like
 	: boxed_radio_column {label = "Crease Pattern Type";	
-			: radio_button {
-				key = "mountain";
-				label = "Mountain";
-				value = "1";
-			}
-			: radio_button {
-				key = "valley";
-				label = "Valley";
-			}
-			: radio_button {
-				key = "polygon";
-				label = "Polygon";
-			}
+		: radio_button {
+			key = "mountain";
+			label = "Mountain";
+			value = "1";
+		}
+		: radio_button {
+			key = "valley";
+			label = "Valley";
+		}
+		: radio_button {
+			key = "polygon";
+			label = "Polygon";
+		}
 	}
 
 	: boxed_radio_column {label = "Chirality";	
-			: radio_button {
-				key = "cw";
-				label = "Clockwise";
-				value = "1";
-			}
-			: radio_button {
-				key = "ccw";
-				label = "Counterclockwise";
-			}
+		: radio_button {
+			key = "cw";
+			label = "Clockwise";
+			value = "1";
+		}
+		: radio_button {
+			key = "ccw";
+			label = "Counterclockwise";
+		}
 	}
 	
 	// i think it would be better if this had less text and instead the user could hover over a shorter description and get more detail then
@@ -128,8 +127,8 @@ drawkreslingcon : dialog { label = "Draw Conical Kresling";
 	}
 	ok_cancel;
 	
-		: errtile
-		{
-		width = 100;
-		}
+	: errtile
+	{
+	width = 100;
+	}
 }

@@ -1,4 +1,4 @@
-(defun drawkreslingmountaincon (H H0 n a b Npt crease_type chir hole diameter layers / M H0sqr Hsqr param rsmall Rlarge rssqr Rlsqr phi0 c v beta cosNMO NMO OMP O P apothem p0 newP apothemb tabwidth j Qu Ru Q R ptList set1 firstt p00) 
+(defun drawkreslingmountaincon (H H0 n a b Npt crease_type chir hole diameter layers / M H0sqr Hsqr param rsmall Rlarge rssqr Rlsqr phi0 c v beta cosNMO NMO OMP O P apothem p0 newP apothemb tabwidth j Qu Ru Q R halfwindowside bottomleft topright ptList set1 biggroup firstt p00 mid) 
 
 	(defun *error* (msg)
 		(if (= msg "Function cancelled")
@@ -81,13 +81,13 @@
 			(command "_pline" Npt O Q R P M *Cancel*)
 			(command "_layer" "_n" "outline" "")
 			(command "_layer" "_color" 4 "outline" "")
-	 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
-	 		;draw the creases
+			(command "_change" (entlast) "" "_p" "_la" "outline" "")
+			;draw the creases
 			(command "_pline" Npt M O P *Cancel*)
 			(command "_layer" "_n" "creases" "")
 			(command "_layer" "_color" 3 "creases" "")
-	 		(command "_change" (entlast) "" "_p" "_la" "creases" "")
-	 		;make a group out of the panel and tab
+			(command "_change" (entlast) "" "_p" "_la" "creases" "")
+			;make a group out of the panel and tab
 			(setq ptList (list M Npt O P M O Q R))
 			(setq set1 (ssget "F" ptList))
 			(command "_.group" "c" "panel_and_tab" "panel and tab" set1 "")
@@ -128,17 +128,17 @@
 			(command "_break" O P)
 			;draw the rest of the outline
 			(command "_line" Npt O *Cancel*)
-	 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
-	 		(ssadd (entlast) biggroup)
-	 		(command "_line" M P *Cancel*)
-	 		(command "_change" (entlast) "" "_p" "_la" "outline" "")
-	 		(ssadd (entlast) biggroup)
-	 		;draw the creases
+			(command "_change" (entlast) "" "_p" "_la" "outline" "")
+			(ssadd (entlast) biggroup)
+			(command "_line" M P *Cancel*)
+			(command "_change" (entlast) "" "_p" "_la" "outline" "")
+			(ssadd (entlast) biggroup)
+			;draw the creases
 			(command "_pline" Npt M O P *Cancel*)
-	 		(command "_change" (entlast) "" "_p" "_la" "creases" "")
-	 		(ssadd (entlast) biggroup)
-	 		;ungroup the panel and tab group
-	 		(command "_ungroup" "NA" "panel_and_tab")
+			(command "_change" (entlast) "" "_p" "_la" "creases" "")
+			(ssadd (entlast) biggroup)
+			;ungroup the panel and tab group
+			(command "_ungroup" "NA" "panel_and_tab")
 		)
 		;finish first panel
 		(progn

@@ -1,4 +1,4 @@
-(defun checktypescon()
+(defun checktypescon ( / rsmall Rlarge)
 	;useful terms
 	(setq rsmall (/ (distof (get_tile "a")) (* 2 (sin (/ pi (atoi (get_tile "n")))))))
 	(setq Rlarge (/ (distof (get_tile "b")) (* 2 (sin (/ pi (atoi (get_tile "n")))))))
